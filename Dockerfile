@@ -3,7 +3,7 @@
 FROM rust:1.85-bookworm AS builder
 
 # Install sqlx-cli
-RUN cargo install sqlx-cli --version ^0.7
+RUN cargo install sqlx-cli --version '^0.7'
 
 WORKDIR /app
 
