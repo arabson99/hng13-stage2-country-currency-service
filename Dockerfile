@@ -1,9 +1,9 @@
 # Stage 1: Builder
 # Use a specific Rust version for consistency
-FROM rust:1.85-bookworm AS builder
+FROM rust:1.90-bookworm AS builder
 
 # Install sqlx-cli
-RUN cargo install sqlx-cli --version 0.7
+RUN cargo install sqlx-cli --version '^0.7'
 
 WORKDIR /app
 
