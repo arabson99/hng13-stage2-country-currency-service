@@ -36,7 +36,7 @@ async fn refresh_countries(
     log::info!("Starting data refresh...");
 
     // 1. Fetch data from external APIs
-    let (countries_res, mut rates_res) = tokio::try_join!(
+    let (countries_res, rates_res) = tokio::try_join!(
         external::fetch_countries(&state.http_client),
         external::fetch_exchange_rates(&state.http_client)
     )?;

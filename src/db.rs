@@ -49,7 +49,7 @@ pub async fn refresh_data(
 
         // 3. Upsert logic
         // Use `INSERT ... ON DUPLICATE KEY UPDATE` for efficient upsert
-        sqlx::query!(
+        sqlx::query(
             r#"
             INSERT INTO countries (
                 name, capital, region, population, currency_code, 
@@ -66,42 +66,41 @@ pub async fn refresh_data(
                 flag_url = VALUES(flag_url),
                 last_refreshed_at = VALUES(last_refreshed_at)
             "#,
-            country.name,
-            country.capital,
-            country.region,
-            country.population,
-            currency_code,
-            exchange_rate,
-            estimated_gdp,
-            country.flag,
-            refresh_time
         )
+        .bind(country.name)
+        .bind(country.capital)
+        .bind(country.region)
+        .bind(country.population)
+        .bind(currency_code)
+        .bind(exchange_rate)
+        .bind(estimated_gdp)
+        .bind(country.flag)
+        .bind(refresh_time)
         .execute(&mut *tx)
         .await?;
     }
 
     // 4. Update app status
-    sqlx::query!(
+    sqlx::query(
         r#"
         UPDATE app_status 
         SET total_countries = ?, last_refreshed_at = ? 
         WHERE id = 1
         "#,
-        country_count,
-        refresh_time
     )
+    .bind(country_count)
+    .bind(refresh_time)
     .execute(&mut *tx)
     .await?;
 
     // 5. Fetch top 5 countries for image generation
-    let top_countries = sqlx::query_as!(
-        Country,
+    let top_countries = sqlx::query_as::<_, Country>(
         r#"
         SELECT * FROM countries 
         WHERE estimated_gdp IS NOT NULL
         ORDER BY estimated_gdp DESC 
         LIMIT 5
-        "#
+        "#,
     )
     .fetch_all(&mut *tx)
     .await?;
@@ -164,7 +163,8 @@ pub async fn get_country_by_name(
     pool: &MySqlPool,
     name: &str,
 ) -> Result<Country, AppError> {
-    sqlx::query_as!(Country, "SELECT * FROM countries WHERE name = ?", name)
+    sqlx::query_as::<_, Country>("SELECT * FROM countries WHERE name = ?")
+        .bind(name)
         .fetch_one(pool)
         .await
         .map_err(|e| match e {
@@ -178,7 +178,8 @@ pub async fn delete_country_by_name(
     pool: &MySqlPool,
     name: &str,
 ) -> Result<(), AppError> {
-    let result = sqlx::query!("DELETE FROM countries WHERE name = ?", name)
+    let result = sqlx::query("DELETE FROM countries WHERE name = ?")
+        .bind(name)
         .execute(pool)
         .await?;
 
@@ -191,9 +192,8 @@ pub async fn delete_country_by_name(
 
 /// Gets the global application status.
 pub async fn get_app_status(pool: &MySqlPool) -> Result<AppStatus, AppError> {
-    let status = sqlx::query_as!(
-        AppStatus,
-        "SELECT total_countries, last_refreshed_at FROM app_status WHERE id = 1"
+    let status = sqlx::query_as::<_, AppStatus>(
+        "SELECT total_countries, last_refreshed_at FROM app_status WHERE id = 1",
     )
     .fetch_one(pool)
     .await?;

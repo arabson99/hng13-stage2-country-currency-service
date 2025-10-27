@@ -22,8 +22,7 @@ COPY ./DejaVuSans.ttf ./DejaVuSans.ttf
 
 # --- THIS IS THE KEY ---
 # Railway provides the DATABASE_URL at build-time.
-# We run migrations *before* building the main app.
-RUN sqlx migrate run
+
 
 # Build the application. The sqlx::query! macros will now
 # find the tables and compile successfully.
