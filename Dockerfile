@@ -43,7 +43,7 @@ COPY --from=builder /app/DejaVuSans.ttf ./DejaVuSans.ttf
 # Set environment variables (Railway will override PORT)
 ENV RUST_LOG=info
 ENV PORT=8080
-
+DATABASE_URL=mysql://root:RsSsHEhhBXbQLdhEIlVaPxxFpUqwwPrp@interchange.proxy.rlwy.net:21342/railway
 
 # Expose the app port
 EXPOSE 8080
