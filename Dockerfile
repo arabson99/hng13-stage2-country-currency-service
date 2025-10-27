@@ -1,13 +1,12 @@
 # Stage 1: Builder
-# Use a specific Rust version for consistency
 FROM rust:1.90-bookworm AS builder
 
-# Install sqlx-cli
+# Install sqlx-cli (required for migrations)
 RUN cargo install sqlx-cli --version '^0.7'
 
 WORKDIR /app
 
-# Copy migrations *first*
+# Copy migrations first to leverage Docker caching
 COPY ./migrations ./migrations
 
 # Copy dependencies and build a cache
@@ -20,16 +19,10 @@ RUN rm -f src/main.rs
 COPY ./src ./src
 COPY ./DejaVuSans.ttf ./DejaVuSans.ttf
 
-# --- THIS IS THE KEY ---
-# Railway provides the DATABASE_URL at build-time.
-
-
-# Build the application. The sqlx::query! macros will now
-# find the tables and compile successfully.
+# Build the application with the sqlx macros
 RUN cargo build --release
 
 # --- Stage 2: Final Image ---
-# Use a minimal image for a small footprint
 FROM debian:bookworm-slim AS runtime
 
 WORKDIR /app
@@ -41,19 +34,20 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the compiled binary from the builder stage
-# !!! MAKE SURE THIS NAME MATCHES YOUR Cargo.toml !!!
-COPY --from=builder /app/target/release/hng13-stage2-country-currency-service .
+COPY --from=builder /app/target/release/hng13-stage2-country-currency-service ./
 
-# Copy assets and migrations (for running at startup)
+# Copy assets and migrations
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/DejaVuSans.ttf ./DejaVuSans.ttf
 
 # Set environment variables (Railway will override PORT)
 ENV RUST_LOG=info
 ENV PORT=8080
+# Make sure DATABASE_URL is passed to the app (Railway handles this automatically)
+ENV DATABASE_URL=${DATABASE_URL}
 
-# Expose the port
+# Expose the app port
 EXPOSE 8080
 
-# !!! MAKE SURE THIS NAME MATCHES YOUR Cargo.toml !!!
+# Start the application
 CMD ["./hng13-stage2-country-currency-service"]
