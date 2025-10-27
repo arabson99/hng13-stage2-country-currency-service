@@ -38,7 +38,7 @@ This is a RESTful API built with Rust, Actix-web, and SQLx that fetches country 
 
 ```bash
 git clone https://github.com/arabson99/hng13-stage2-country-currency-service.git
-cd your-repo-name
+cd hng13-stage2-country-currency-service
 ```
 
 ### 2. Setup Database
