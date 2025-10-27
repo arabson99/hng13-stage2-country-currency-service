@@ -43,8 +43,7 @@ COPY --from=builder /app/DejaVuSans.ttf ./DejaVuSans.ttf
 # Set environment variables (Railway will override PORT)
 ENV RUST_LOG=info
 ENV PORT=8080
-# Make sure DATABASE_URL is passed to the app (Railway handles this automatically)
-ENV DATABASE_URL=${DATABASE_URL}
+
 
 # Expose the app port
 EXPOSE 8080
